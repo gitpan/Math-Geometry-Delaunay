@@ -1,0 +1,24 @@
+---
+abstract: 'Quality Mesh Generator and Delaunay Triangulator'
+author:
+  - 'Michael E. Sheldrake <sheldrake@cpan.org>'
+build_requires:
+  ExtUtils::CBuilder: 0
+  ExtUtils::CppGuess: 0
+  Test::More: 0
+configure_requires:
+  Module::Build: 0.38
+dynamic_config: 1
+generated_by: 'Module::Build version 0.4003, CPAN::Meta::Converter version 2.112150'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Math-Geometry-Delaunay
+provides:
+  Math::Geometry::Delaunay:
+    file: lib/Math/Geometry/Delaunay.pm
+    version: 0.01
+resources:
+  license: http://dev.perl.org/licenses/
+version: 0.01
