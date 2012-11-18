@@ -11,7 +11,7 @@ our $VERSION;
 
 BEGIN {
     use XSLoader;
-    $VERSION = '0.01';
+    $VERSION = '0.02';
     XSLoader::load('Math::Geometry::Delaunay');
     }
 
@@ -24,8 +24,6 @@ use constant {
 
 our @EXPORT_OK = qw(TRI_CONSTRAINED TRI_CONFORMING TRI_CCDT TRI_VORONOI);
 our @EXPORT = qw();
-
-my $point_inside_dist = 0.0001; # arbitrary. todo: eliminate
 
 sub new {
     my $class = shift;
@@ -679,7 +677,7 @@ Math::Geometry::Delaunay - Quality Mesh Generator and Delaunay Triangulator
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
