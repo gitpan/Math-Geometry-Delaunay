@@ -11,7 +11,7 @@ our $VERSION;
 
 BEGIN {
     use XSLoader;
-    $VERSION = '0.07';
+    $VERSION = '0.08';
     XSLoader::load('Math::Geometry::Delaunay');
     }
 
@@ -630,7 +630,7 @@ sub seg_poly_intersections {
                 }
             #if (!isNaN(xi) &&
             if (
-                ($xi || $xi eq 0) &&
+                defined $xi &&
                 ($xi < $lowhix[1] || $xi eq $lowhix[1]) && 
                 ($xi > $lowhix[0] || $xi eq $lowhix[0]) &&
                 ($xi < $lowhiu[1] || $xi eq $lowhiu[1]) && 
@@ -1021,9 +1021,7 @@ sub line_line_intersection {
         $xi=($b2-$b1)/$dm;
         }
     if ($m1 ne 'Inf') {
-        if (
-            ($xi || $xi eq 0)
-            ) {
+        if (defined $xi) {
             my $y=($m1*$xi)+$b1;
             $int = [$xi,$y];
             }
@@ -1283,7 +1281,7 @@ Math::Geometry::Delaunay - Quality Mesh Generator and Delaunay Triangulator
 
 =head1 VERSION
 
-Version 0.07
+Version 0.08
 
 =cut
 
@@ -2015,7 +2013,7 @@ a direction vector for the ray.
 This function is meant as a development and debugging aid, to "dump" the
 geometric data structures specific to this package to a graphical
 representation. Takes an array ref, containing one or two topology hashes,
-as returned by C<triangulate>, a filename string, and then key-value pairs
+as returned by C<triangulate>, a file name string, and then key-value pairs
 with keys corresponding to output lists, and values consisting of references to
 arrays containing style configuration. If two topology hashes are contained in
 the first array ref argument, the second is assumed to represent a Voronoi
@@ -2034,17 +2032,17 @@ configuration key-value pairs.
             #                     line width or   optional
             #         svg color   point radius    extra CSS
             
-            nodes,   ['black'  ,   0.3],
-            edges,   ['#CCCCCC',   0.7],
-            segments,['blue'   ,   0.9,     'stroke-dasharray="1,1"'],
-            elements,['pink']  , # string or function reference
+            nodes    => ['black'  ,   0.3],
+            edges    => ['#CCCCCC',   0.7],
+            segments => ['blue'   ,   0.9,     'stroke-dasharray="1,1"'],
+            elements => ['pink']  , # string or function reference
 
             # these require Voronoi input
 
-            vnodes,  ['purple' ,   0.3],
-            vedges,  ['#FF0000',   0.7],
-            vrays,   ['purple' ,   0.6],
-            circles, ['orange' ,   0.6],
+            vnodes   => ['purple' ,   0.3],
+            vedges   => ['#FF0000',   0.7],
+            vrays    => ['purple' ,   0.6],
+            circles  => ['orange' ,   0.6],
             
           );
 
