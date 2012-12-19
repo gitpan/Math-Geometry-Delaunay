@@ -11,7 +11,7 @@ our $VERSION;
 
 BEGIN {
     use XSLoader;
-    $VERSION = '0.08';
+    $VERSION = '0.09';
     XSLoader::load('Math::Geometry::Delaunay');
     }
 
@@ -545,17 +545,9 @@ sub get_point_in_polygon {
                             ((abs($cosangle) < 0.00000001) ? 1 : 1/$sinangle);
     my $point_wayout = [$poly->[$bottom_left_index]->[0] + $adequate_distance * $cosangle, 
                         $poly->[$bottom_left_index]->[1] + $adequate_distance * $sinangle];
-    my $ray = [$poly->[$bottom_left_index],$point_wayout];
 
-    my @intersections = grep {
-        # print "interdist: ",$_->[2],"\n";
-        # Note the filtering out of very-near-zero distance intersections -
-        # There should always be two intersections where the base of 
-        # the test ray sits on the $poly->[$bottom_left_index] point:
-        # one intersection for each adjacent segment. Better to get them
-        # and ignore them, rather than try to move the base one way or the other
-        # to avoid them.
-        abs($_->[2]) > 10**-5} sort {$a->[2] <=> $b->[2]} seg_poly_intersections($ray,$poly,1);
+    my @intersections = sort {$a->[2] <=> $b->[2]} ray_from_index_poly_intersections($bottom_left_index,$point_wayout,$poly,1);
+
     if (!@intersections) { 
         print "Warning: Failed to calculate hole or region indicator point."; 
         }
@@ -566,25 +558,38 @@ sub get_point_in_polygon {
         my $closest_intersection = $intersections[0];
         $point_inside = [($poly->[$bottom_left_index]->[0] + $closest_intersection->[0])/2,
                          ($poly->[$bottom_left_index]->[1] + $closest_intersection->[1])/2];
-        #print "Calculated point inside: ",$point_inside->[0]," , ",$point_inside->[1],"\n";
         }
-    return $point_inside, $ray;
+    return $point_inside;
     }
 
-sub seg_poly_intersections {
-    my $seg1 = shift;
+sub ray_from_index_poly_intersections {
+    my $vertind = shift;
+    my $raypt = shift;
     my $poly = shift;
     my $doDists = @_ ? shift : 0;
-    my @intersections;
-    for (my $i = -1; $i < @{$poly} - 1; $i++) {
-        my $seg2 = [$poly->[$i],$poly->[$i+1]];
 
+    my $seg1 = [$poly->[$vertind],$raypt];
+    my $x1= $seg1->[0]->[0];
+    my $y1= $seg1->[0]->[1];
+    my $x2= $seg1->[1]->[0];
+    my $y2= $seg1->[1]->[1];
+    my @lowhix=($x2>$x1)?($x1,$x2):($x2,$x1);
+    my @lowhiy=($y2>$y1)?($y1,$y2):($y2,$y1);
+
+    my @intersections;
+
+    for (my $i = -1; $i < $#$poly; $i++) {
+
+        # skip the segs on either side of the ray base point
+        next if $i == $vertind || ($i + 1) == $vertind || ($vertind == $#$poly && $i == -1);
+
+        my $seg2 = [$poly->[$i],$poly->[$i+1]];
         my @segsegret;
 
-        my $x1= $seg1->[0]->[0]; my $y1= $seg1->[0]->[1];
-        my $x2= $seg1->[1]->[0]; my $y2= $seg1->[1]->[1];
-        my $u1= $seg2->[0]->[0]; my $v1= $seg2->[0]->[1];
-        my $u2= $seg2->[1]->[0]; my $v2= $seg2->[1]->[1];
+        my $u1= $seg2->[0]->[0];
+        my $v1= $seg2->[0]->[1];
+        my $u2= $seg2->[1]->[0];
+        my $v2= $seg2->[1]->[1];
 
         ##to maybe optimize for the case where segments are
         ##expected NOT to intersect most of the time
@@ -615,8 +620,10 @@ sub seg_poly_intersections {
 
         my  $xi;
         my $dm = $m1 - $m2;
-        if    ($m1 eq 'Inf' && $m2 ne 'Inf') {$xi = $x1;$b2 = $v1 - ($m2 * $u1);}
-        elsif ($m2 eq 'Inf' && $m1 ne 'Inf') {$xi = $u1;$b1 = $y1 - ($m1 * $x1);}
+        if    ($m1 eq 'Inf' && $m2 ne 'Inf') {$xi = $x1;$b2 = $v1 - ($m2 * $u1);
+        }
+        elsif ($m2 eq 'Inf' && $m1 ne 'Inf') {$xi = $u1;$b1 = $y1 - ($m1 * $x1);
+        }
         elsif (abs($dm) > 0.000000000001) {
             $b1 = $y1 - ($m1 * $x1);
             $b2 = $v1 - ($m2 * $u1);    
@@ -624,11 +631,9 @@ sub seg_poly_intersections {
             }
         my @lowhiu=($u2>$u1)?($u1,$u2):($u2,$u1);
         if ($m1 ne 'Inf') {
-            my @lowhix=($x2>$x1)?($x1,$x2):($x2,$x1);
             if ($m2 eq 'Inf' &&   ($u2<$lowhix[0] || $u2>$lowhix[1]) ) {
-                #return ();
+                next;
                 }
-            #if (!isNaN(xi) &&
             if (
                 defined $xi &&
                 ($xi < $lowhix[1] || $xi eq $lowhix[1]) && 
@@ -639,9 +644,9 @@ sub seg_poly_intersections {
                 my $y=($m1*$xi)+$b1;
                 my @lowhiv=($v2>$v1)?($v1,$v2):($v2,$v1);
                 if ($m2 eq 'Inf' &&
-                    $y<$lowhiv[0] || $y>$lowhiv[1]
+                    ($y<$lowhiv[0] || $y>$lowhiv[1])
                     ) {
-                    #return ();
+                    next;
                     }
                 else {
                     push(@intersections,[$xi,$y]);
@@ -650,12 +655,10 @@ sub seg_poly_intersections {
             }
         elsif ($m2 ne 'Inf') {#so $m1 is Inf
             if ($x1 < $lowhiu[0] || $x1 > $lowhiu[1] && ! ($x1 eq $lowhiu[0] || $x1 eq $lowhiu[1])) {
-                #return ();
+                next;
                 }
-            my @lowhiy=($y2>$y1)?($y1,$y2):($y2,$y1);
             my @lowhiv=($v2>$v1)?($v1,$v2):($v2,$v1);
             my $yi = ($m2*$xi)+$b2;
-            #print "$x1,$y1,$x2,$y2\n  $yi = ($m2*$xi)+$b2;\n";
             if (($yi || $yi eq 0) &&
                 ($yi < $lowhiy[1] || $yi eq $lowhiy[1]) && 
                 ($yi > $lowhiy[0] || $yi eq $lowhiy[0]) &&
@@ -966,7 +969,7 @@ sub seg_seg_intersection {
             my $y=($m1*$xi)+$b1;
             my @lowhiv=($v2>$v1)?($v1,$v2):($v2,$v1);
             if ($m2 eq 'Inf' &&
-                $y<$lowhiv[0] || $y>$lowhiv[1]
+                ($y<$lowhiv[0] || $y>$lowhiv[1])
                 ) {
                 return;
                 }
@@ -1028,8 +1031,7 @@ sub line_line_intersection {
         }
     elsif ($m2 ne 'Inf') { # so $m1 is Inf
         my $yi = ($m2*$xi)+$b2;
-        if (($yi || $yi eq 0)
-            ) {
+        if ($yi || $yi eq 0) {
             $int = [$xi,$yi];
             }
         }
@@ -1281,7 +1283,7 @@ Math::Geometry::Delaunay - Quality Mesh Generator and Delaunay Triangulator
 
 =head1 VERSION
 
-Version 0.08
+Version 0.09
 
 =cut
 
@@ -2083,15 +2085,6 @@ might shade each triangle according to the average of a node attribute.
 
 =head2 mic_adjust
 
-Warning: not yet thoroughly tested; may move elsewhere
-
-One use of the Voronoi diagram of a tessellated polygon is to derive an
-approximation of the polygon's medial axis by pruning infinite rays and perhaps
-trimming or refining remaining branches. The approximation improves as
-intervals between sample points on the polygon become shorter. But it's not 
-always desirable to multiply the number of polygon points to achieve short
-intervals.
-
 =for html <div style="width:30%;float:right;display:inline-block;text-align:center;">
 <svg viewBox="-23 -11 204 165" width="57%" preserveAspectRatio="xMinYMin meet" style="margin-top:15px;" xmlns="http://www.w3.org/2000/svg" version="1.1">
 <style type="text/css"> .edge {stroke:gray;stroke-width:2;} .seg  {stroke:black;stroke-width:1;} .vedge {stroke:blue;stroke-width:2;} .vcirc {stroke-width:0.8;stroke:blue;fill:none;opacity:0.7;} </style>
@@ -2252,6 +2245,15 @@ intervals.
 </g></svg>
 <br/><small>improved approximation<br/>after calling mic_adust()</small><br/>
 </div>
+
+Warning: not yet thoroughly tested; may move elsewhere
+
+One use of the Voronoi diagram of a tessellated polygon is to derive an
+approximation of the polygon's medial axis by pruning infinite rays and perhaps
+trimming or refining remaining branches. The approximation improves as
+intervals between sample points on the polygon become shorter. But it's not 
+always desirable to multiply the number of polygon points to achieve short
+intervals.
 
 At any point on the true medial axis, there is a maximum inscribed circle,
 with it's center on the medial axis, and tangent to the polygon in at least
