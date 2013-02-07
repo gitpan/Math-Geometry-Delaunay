@@ -18,7 +18,7 @@ name: Math-Geometry-Delaunay
 provides:
   Math::Geometry::Delaunay:
     file: lib/Math/Geometry/Delaunay.pm
-    version: 0.12
+    version: 0.13
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.12
+version: 0.13
