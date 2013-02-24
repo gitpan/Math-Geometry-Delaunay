@@ -11,7 +11,7 @@ our $VERSION;
 
 BEGIN {
     use XSLoader;
-    $VERSION = '0.15';
+    $VERSION = '0.16';
     XSLoader::load('Math::Geometry::Delaunay');
     exactinit();
     }
@@ -63,6 +63,15 @@ sub new {
 
     bless $self, $class;
     return $self;
+    }
+
+sub reset {
+    my $self = shift;
+    # clear input
+    $self->{poly}->{$_} = [] for qw(regions holes polylines points segments);
+    $self->{poly}->{segptrefs} = {};
+    # clear any previous output
+    $self->{poly}->{$_} = [] for qw(outnodes voutnodes);
     }
 
 # triangulatio interfaces
@@ -319,9 +328,13 @@ sub prepPoly {
             map {@{$_}[2 .. $coords_plus_attrs - 1]} (@allpts, @{$self->{poly}->{points}}));
         }
 
+    # discard intermediate data now that it's been loaded into C arrays
+    $self->reset();
+
     # set up new triangulateio C structs to receive output
-    $self->{out}    = new Math::Geometry::Delaunay::Triangulateio;
-    $self->{vorout} = new Math::Geometry::Delaunay::Triangulateio;
+    $self->{out}    = Math::Geometry::Delaunay::Triangulateio->new();
+    $self->{vorout} = Math::Geometry::Delaunay::Triangulateio->new();
+
     return;
     }
 
@@ -716,8 +729,6 @@ sub mic_adjust {
     my @new_vnode_points; # voronoi vertices moved to MIC center points
     my @new_vnode_radii;  # will be calculated and added to node data
     my @new_vnode_tangents;  # where the MIC touches the boundary PSLG
-
-    my $dsioff=scalar(@{$topo->{nodes}});
 
     my $vnc=-1; # will use to look up triangle that corresponds to the voronoi node
     # $vnc can probably be replaced with $vnode->{index}
@@ -1523,7 +1534,7 @@ Math::Geometry::Delaunay - Quality Mesh Generator and Delaunay Triangulator
 
 =head1 VERSION
 
-Version 0.15
+Version 0.16
 
 =cut
 
