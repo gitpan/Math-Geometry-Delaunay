@@ -9,7 +9,7 @@ configure_requires:
   ExtUtils::CppGuess: 0
   Module::Build: 0.38
 dynamic_config: 1
-generated_by: 'Module::Build version 0.4003, CPAN::Meta::Converter version 2.112150'
+generated_by: 'Module::Build version 0.4003, CPAN::Meta::Converter version 2.120921'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -18,7 +18,7 @@ name: Math-Geometry-Delaunay
 provides:
   Math::Geometry::Delaunay:
     file: lib/Math/Geometry/Delaunay.pm
-    version: 0.16
+    version: v0.16.1
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.16
+version: v0.16.1

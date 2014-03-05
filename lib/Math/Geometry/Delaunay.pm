@@ -11,7 +11,7 @@ our $VERSION;
 
 BEGIN {
     use XSLoader;
-    $VERSION = '0.16';
+    $VERSION = '0.16.1';
     XSLoader::load('Math::Geometry::Delaunay');
     exactinit();
     }
@@ -1534,7 +1534,7 @@ Math::Geometry::Delaunay - Quality Mesh Generator and Delaunay Triangulator
 
 =head1 VERSION
 
-Version 0.16
+Version 0.16.1
 
 =cut
 
@@ -1964,7 +1964,7 @@ topology is the second item returned.
     elements => [
                   { # a triangle
                   nodes      => [noderef0, noderef1, noderef2],
-                  edges      => [edgeref0, edgeref1],
+                  edges      => [edgeref0, edgeref1, edgeref2],
                   neighbors  => [neighref0, neighref1, neighref2],
                   attributes => [attrib0, ...]
                   },
