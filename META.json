@@ -4,7 +4,7 @@
       "Michael E. Sheldrake <sheldrake@cpan.org>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.4003, CPAN::Meta::Converter version 2.120921",
+   "generated_by" : "Module::Build version 0.4204",
    "license" : [
       "perl_5"
    ],
@@ -30,7 +30,10 @@
    "provides" : {
       "Math::Geometry::Delaunay" : {
          "file" : "lib/Math/Geometry/Delaunay.pm",
-         "version" : "0.17"
+         "version" : "0.18"
+      },
+      "mgd_topo" : {
+         "file" : "lib/Math/Geometry/Delaunay.pm"
       }
    },
    "release_status" : "stable",
@@ -39,5 +42,5 @@
          "http://dev.perl.org/licenses/"
       ]
    },
-   "version" : "0.17"
+   "version" : "0.18"
 }
